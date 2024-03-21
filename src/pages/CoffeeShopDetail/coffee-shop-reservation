@@ -1,0 +1,80 @@
+import React, { useState, useEffect } from 'react';
+
+const CatCafeReservation = () => {
+    const [tables, setTables] = useState([]);
+    const [selectedTable, setSelectedTable] = useState(null);
+    const [reservationTime, setReservationTime] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTables = async () => {
+            // Simulated API call
+            const response = await fetch('api/tables');
+            const data = await response.json();
+            setTables(data);
+            setIsLoading(false);
+        };
+
+        fetchTables();
+    }, []);
+
+    const handleTableSelect = (table) => {
+        setSelectedTable(table);
+    };
+
+    const handleReservationTimeChange = (event) => {
+        setReservationTime(event.target.value);
+    };
+
+    const handleReservationSubmit = async () => {
+        const response = await fetch(`api/checkAvailability?tableId=${selectedTable.id}&time=${reservationTime}`);
+        const isAvailable = await response.json();
+
+        if (isAvailable) {
+            await fetch('api/reserveTable', {
+                method: 'POST',
+                body: JSON.stringify({ tableId: selectedTable.id, time: reservationTime }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            alert('Table reserved successfully!');
+        } else {
+            alert('Sorry, the selected table is already booked at that time. Please choose another time or table.');
+        }
+    };
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
+    return (
+        <div>
+        <h1>Cat Cafe Table Reservation < /h1>
+            < div >
+            <label>Select a table: </label>
+                < select onChange = {(event) => handleTableSelect(JSON.parse(event.target.value))}>
+                    <option value="" > Select a table < /option>
+{
+    tables.map((table) => (
+        <option key= { table.id } value = { JSON.stringify(table) } >
+        { table.name }
+        < /option>
+    ))
+}
+</select>
+    < /div>
+{
+    selectedTable && (
+        <div>
+        <label>Choose reservation time: </label>
+            < input type = "datetime-local" value = { reservationTime } onChange = { handleReservationTimeChange } />
+                <button onClick={ handleReservationSubmit }> Reserve Table < /button>
+                    < /div>
+      )
+}
+</div>
+  );
+};
+
+export default CoffeeShopReservation;
